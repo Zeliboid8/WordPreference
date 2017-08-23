@@ -13,6 +13,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
@@ -37,8 +38,15 @@ public class WordPreferenceRunner extends Application
     private static Set<String> markedWords = new HashSet<String>(); // Set of marked words
     private static int urlNumber = 1;
     
-    private static final String url1 = "http://www.wordreference.com/es/en/translation.asp?spen=";
-    private static final String url2 = "http://www.wordreference.com/es/translation.asp?tranword=";
+    private static final String url1 = "http://www.wordreference.com/es/en/translation.asp?spen=";	// Spanish to English
+    private static final String url2 = "http://www.wordreference.com/es/translation.asp?tranword=";	// English to Spanish
+    private static final String url3 = "http://www.wordreference.com/fren/";	// French to English
+    private static final String url4 = "http://www.wordreference.com/enfr/";	// English to French
+    
+    private static final String instructions1 = "Introduzca su palabra aqui.";
+    private static final String instructions2 = "Type your word here.";
+    private static final String instructions3 = "Tape tu mot ici.";
+    private static final String instructions4 = "Type your word here.";
     
     public static void main(String[] args) 
     {
@@ -87,6 +95,7 @@ public class WordPreferenceRunner extends Application
         	public void handle(ActionEvent click)
         	{
         		urlNumber = 1;
+        		wordInput.setPromptText(instructions1);
         	}
         });
         MenuItem engToSpa = new MenuItem("English to Spanish");
@@ -94,9 +103,26 @@ public class WordPreferenceRunner extends Application
         	public void handle(ActionEvent click)
         	{
         		urlNumber = 2;
+        		wordInput.setPromptText(instructions2);
         	}
         });
-        menuOptions.getItems().addAll(spaToEng, engToSpa);
+        MenuItem freToEng = new MenuItem("French to English");
+        freToEng.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		urlNumber = 3;
+        		wordInput.setPromptText(instructions3);
+        	}
+        });
+        MenuItem engToFre = new MenuItem("English to French");
+        engToFre.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		urlNumber = 4;
+        		wordInput.setPromptText(instructions4);
+        	}
+        });
+        menuOptions.getItems().addAll(spaToEng, engToSpa, new SeparatorMenuItem(), freToEng, engToFre);
         
         menuBar.getMenus().addAll(menuFile, menuOptions);
 
@@ -161,6 +187,17 @@ public class WordPreferenceRunner extends Application
         });
         
         // Word Input Section
+        switch (urlNumber) 
+    	{
+    		case 1:	wordInput.setPromptText(instructions1);
+    				break;
+    		case 2: wordInput.setPromptText(instructions2);
+    				break;
+    		case 3: wordInput.setPromptText(instructions3);
+    				break;
+    		case 4: wordInput.setPromptText(instructions4);
+    				break;
+    	}
         wordInput.setPromptText("Introduzca su palabra aqui.");
         wordInput.setPrefHeight(30);
         wordInput.setMaxHeight(30);
@@ -215,13 +252,16 @@ public class WordPreferenceRunner extends Application
     	{
     		word = word.substring(0, word.indexOf(" ")) + "%20" + word.substring(word.indexOf(" ") + 1);
     	}
-    	if (urlNumber == 1)	// Spanish to English
+    	switch (urlNumber) 
     	{
-    		url = new URL(url1 + word);
-    	}
-    	if (urlNumber == 2)	// English to Spanish
-    	{
-    		url = new URL(url2 + word);
+    		case 1:	url = new URL(url1 + word);
+    				break;
+    		case 2: url = new URL(url2 + word);
+    				break;
+    		case 3: url = new URL(url3 + word);
+    				break;
+    		case 4: url = new URL(url4 + word);
+    				break;
     	}
     	BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
         String inputLine;
