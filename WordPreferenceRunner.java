@@ -7,6 +7,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -31,12 +32,13 @@ import java.net.*;
 public class WordPreferenceRunner extends Application 
 {
     private static Stage window;
-    private static Set<String> translations = new LinkedHashSet<String>(); // Used to eliminate duplicates
+    private static Map<String, String> translations = new LinkedHashMap<String, String>(); // Used to eliminate duplicates
     private static ObservableList<String> words = FXCollections.observableArrayList(); // Translated words
     private static ListView<String> list = new ListView<String>();	// List of possible meanings
     private static TextField wordInput = new TextField(); // Input field
     private static Set<String> markedWords = new HashSet<String>(); // Set of marked words
-    private static int urlNumber = 1;
+    private static int languageSetting = 1;
+    private static boolean showMoreInfo = false;
     
     private static final String url1 = "http://www.wordreference.com/es/en/translation.asp?spen=";	// Spanish to English
     private static final String url2 = "http://www.wordreference.com/es/translation.asp?tranword=";	// English to Spanish
@@ -61,76 +63,12 @@ public class WordPreferenceRunner extends Application
         window.setTitle("WordPreference");
         // Setting taskbar icon
         window.getIcons().add(new Image(WordPreferenceRunner.class.getResourceAsStream("Icon.png")));
-        
-        // Menu Section
-        MenuBar menuBar = new MenuBar();
-        Menu menuFile = new Menu("File");
-        MenuItem reviewMarked = new MenuItem("Review");
-        reviewMarked.setOnAction(new EventHandler<ActionEvent>() {
-        	public void handle(ActionEvent click)
-        	{
-        		translations.clear();
-        		words.clear();
-        		for (String word : markedWords)
-        		{
-        			words.add(word);
-        		}
-        		update();
-        	}
-        });
-        reviewMarked.setAccelerator(KeyCombination.keyCombination("Ctrl+R"));
-        MenuItem save = new MenuItem("Save");
-        save.setOnAction(new EventHandler<ActionEvent>() {
-        	public void handle(ActionEvent click)
-        	{
-        		saveFile();
-        	}
-        });
-        save.setAccelerator(KeyCombination.keyCombination("Ctrl+S"));
-        menuFile.getItems().addAll(reviewMarked, save);
-        
-        Menu menuOptions = new Menu("Options");
-        MenuItem spaToEng = new MenuItem("Spanish to English");
-        spaToEng.setOnAction(new EventHandler<ActionEvent>() {
-        	public void handle(ActionEvent click)
-        	{
-        		urlNumber = 1;
-        		wordInput.setPromptText(instructions1);
-        	}
-        });
-        MenuItem engToSpa = new MenuItem("English to Spanish");
-        engToSpa.setOnAction(new EventHandler<ActionEvent>() {
-        	public void handle(ActionEvent click)
-        	{
-        		urlNumber = 2;
-        		wordInput.setPromptText(instructions2);
-        	}
-        });
-        MenuItem freToEng = new MenuItem("French to English");
-        freToEng.setOnAction(new EventHandler<ActionEvent>() {
-        	public void handle(ActionEvent click)
-        	{
-        		urlNumber = 3;
-        		wordInput.setPromptText(instructions3);
-        	}
-        });
-        MenuItem engToFre = new MenuItem("English to French");
-        engToFre.setOnAction(new EventHandler<ActionEvent>() {
-        	public void handle(ActionEvent click)
-        	{
-        		urlNumber = 4;
-        		wordInput.setPromptText(instructions4);
-        	}
-        });
-        menuOptions.getItems().addAll(spaToEng, engToSpa, new SeparatorMenuItem(), freToEng, engToFre);
-        
-        menuBar.getMenus().addAll(menuFile, menuOptions);
 
         // Translated Table (on right)
         list.setItems(words);
         list.setMaxHeight(150);
         
-        // Right-click features
+     // Right-click features
         list.setCellFactory(listView -> {
             ListCell<String> cell = new ListCell<>();
             ContextMenu contextMenu = new ContextMenu(); // Right-click menu
@@ -164,6 +102,94 @@ public class WordPreferenceRunner extends Application
             return cell ;
         });
         
+     // Menu Section
+        MenuBar menuBar = new MenuBar();
+        Menu menuFile = new Menu("File");
+        MenuItem reviewMarked = new MenuItem("Review");
+        reviewMarked.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		translations.clear();
+        		words.clear();
+        		for (String word : markedWords)
+        		{
+        			words.add(word);
+        		}
+        		update();
+        	}
+        });
+        reviewMarked.setAccelerator(KeyCombination.keyCombination("Ctrl+R"));
+        MenuItem save = new MenuItem("Save");
+        save.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		saveFile();
+        	}
+        });
+        save.setAccelerator(KeyCombination.keyCombination("Ctrl+S"));
+        menuFile.getItems().addAll(reviewMarked, save);
+        
+        Menu menuOptions = new Menu("Options");
+        CheckMenuItem spaToEng = new CheckMenuItem("Spanish to English");
+        CheckMenuItem engToSpa = new CheckMenuItem("English to Spanish");
+        CheckMenuItem freToEng = new CheckMenuItem("French to English");
+        CheckMenuItem engToFre = new CheckMenuItem("English to French");
+        spaToEng.setSelected(true);
+        spaToEng.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		languageSetting = 1;
+        		wordInput.setPromptText(instructions1);
+        		engToSpa.setSelected(false);
+        		freToEng.setSelected(false);
+        		engToFre.setSelected(false);
+        	}
+        });
+        engToSpa.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		languageSetting = 2;
+        		wordInput.setPromptText(instructions2);
+        		spaToEng.setSelected(false);
+        		freToEng.setSelected(false);
+        		engToFre.setSelected(false);
+        	}
+        });
+        freToEng.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		languageSetting = 3;
+        		wordInput.setPromptText(instructions3);
+        		spaToEng.setSelected(false);
+        		engToSpa.setSelected(false);
+        		engToFre.setSelected(false);
+        	}
+        });
+        engToFre.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		languageSetting = 4;
+        		wordInput.setPromptText(instructions4);
+        		spaToEng.setSelected(false);
+        		engToSpa.setSelected(false);
+        		freToEng.setSelected(false);
+        	}
+        });
+        menuOptions.getItems().addAll(spaToEng, engToSpa, new SeparatorMenuItem(), freToEng, engToFre);
+        
+        Menu menuMore = new Menu("More");
+        CheckMenuItem showInfo = new CheckMenuItem("Show More Information");
+        showInfo.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		showMoreInfo = !showMoreInfo;
+        		update();
+        	}
+        });
+        showInfo.setAccelerator(KeyCombination.keyCombination("Ctrl+I"));
+        menuMore.getItems().add(showInfo);
+        menuBar.getMenus().addAll(menuFile, menuOptions, menuMore);
+        
         // Mark/Favorite Button
         ToggleButton mark = new ToggleButton("Mark");
         mark.setMaxHeight(35);
@@ -187,7 +213,7 @@ public class WordPreferenceRunner extends Application
         });
         
         // Word Input Section
-        switch (urlNumber) 
+        switch (languageSetting) 
     	{
     		case 1:	wordInput.setPromptText(instructions1);
     				break;
@@ -219,15 +245,14 @@ public class WordPreferenceRunner extends Application
             		{
             			mark.setSelected(true);
             		}
-            	}
-            	else
-            	{
-            		mark.setSelected(false);
+            		else
+            		{
+            			mark.setSelected(false);
+            		}
             	}
             }
         };  
         wordInput.addEventFilter(KeyEvent.KEY_PRESSED, eventHandlerEnter);
-        
         
         Scene scene = new Scene(new VBox(), 420, 290);
         scene.setFill(Color.OLDLACE);
@@ -245,14 +270,13 @@ public class WordPreferenceRunner extends Application
     public static void search(String text) throws Exception 
     {
     	translations.clear();
-    	words.clear();
     	String word = text;
     	URL url = null;
     	while (word.contains(" "))
     	{
     		word = word.substring(0, word.indexOf(" ")) + "%20" + word.substring(word.indexOf(" ") + 1);
     	}
-    	switch (urlNumber) 
+    	switch (languageSetting) 
     	{
     		case 1:	url = new URL(url1 + word);
     				break;
@@ -269,11 +293,14 @@ public class WordPreferenceRunner extends Application
         {
         	if (inputLine.contains("class='ToWrd'"))  // Every translation is preceded by "class='ToWrd'" in HTML
         	{
-        		if (!inputLine.contains("English") && !inputLine.contains("EspaÃ±ol"))
+        		if (!inputLine.contains("weight:bold"))
         		{
         			String beginningCut = inputLine.substring(inputLine.indexOf("class='ToWrd'") + 15);
         			String endCut = beginningCut.substring(0, beginningCut.indexOf("<"));
-        			translations.add(endCut);
+        			String finalWord = convert(endCut);
+        			String beginningCutGender = beginningCut.substring(beginningCut.indexOf("POS2'") + 6);
+        			String endCutGender = beginningCutGender.substring(0, beginningCutGender.indexOf("<"));
+        			translations.put(finalWord, endCutGender);
         		}
         	}
         }
@@ -283,9 +310,17 @@ public class WordPreferenceRunner extends Application
     
     public static void update()
     {
-    	for (String translatedWord : translations)
+    	words.clear();
+    	for (Map.Entry<String, String> e : translations.entrySet())
         {
-        	words.add(translatedWord);
+        	if (showMoreInfo && e.getValue().length() != 0)
+        	{
+        		words.add(e.getKey() + " (" + e.getValue() + ")");
+        	}
+        	else
+        	{
+        		words.add(e.getKey());
+        	}
         }
     	list.setItems(words);
     }
@@ -322,5 +357,31 @@ public class WordPreferenceRunner extends Application
     	{
     	}
     	System.out.println("File loaded.");
+    }
+    
+    public static String convert(String original)
+    {
+    	original = original.replace("Ã¨", "è");
+    	original = original.replace("Ã©", "é");
+    	original = original.replace("Ã¢", "â");
+    	original = original.replace("Ã²", "ò");
+    	original = original.replace("Ã³", "ó");
+    	original = original.replace("Ã´", "ô");
+    	original = original.replace("Ã§", "ç");
+    	original = original.replace("Ã¼", "ü");
+    	original = original.replace("Ãº", "ú");
+    	original = original.replace("Ã¹", "ù");
+    	original = original.replace("Ã»", "û");
+    	original = original.replace("Ã¯", "ï");
+    	original = original.replace("Ã¬", "ì");
+    	original = original.replace("Ã­", "í");
+    	original = original.replace("Ã®", "î");
+    	original = original.replace("Â¿", "¿");
+    	original = original.replace("Â¡", "¡");
+    	original = original.replace("Ã±", "ñ");
+    	original = original.replace("Ã¡", "á");
+    	original = original.replace("Ã¢", "â");
+    	original = original.replace("Ã", "à"); // Must come last
+    	return original;
     }
 }
