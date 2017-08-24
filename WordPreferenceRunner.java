@@ -115,7 +115,7 @@ public class WordPreferenceRunner extends Application
         		{
         			words.add(word);
         		}
-        		update();
+        		list.setItems(words);
         	}
         });
         reviewMarked.setAccelerator(KeyCombination.keyCombination("Ctrl+R"));
