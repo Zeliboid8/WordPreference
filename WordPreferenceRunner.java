@@ -39,6 +39,7 @@ public class WordPreferenceRunner extends Application
     private static Set<String> markedWords = new HashSet<String>(); // Set of marked words
     private static int languageSetting = 1;
     private static boolean showMoreInfo = false;
+    private static URL url;
     
     private static final String url1 = "http://www.wordreference.com/es/en/translation.asp?spen=";	// Spanish to English
     private static final String url2 = "http://www.wordreference.com/es/translation.asp?tranword=";	// English to Spanish
@@ -66,15 +67,15 @@ public class WordPreferenceRunner extends Application
 
         // Translated Table (on right)
         list.setItems(words);
-        list.setMaxHeight(150);
+        list.setMaxHeight(Double.MAX_VALUE);
         
      // Right-click features
         list.setCellFactory(listView -> {
             ListCell<String> cell = new ListCell<>();
             ContextMenu contextMenu = new ContextMenu(); // Right-click menu
-            MenuItem lookUp = new MenuItem();
-            lookUp.textProperty().bind(Bindings.format("Look Up ", cell.itemProperty()));
-            lookUp.setOnAction(event -> {
+            MenuItem translate = new MenuItem();
+            translate.textProperty().bind(Bindings.format("Translate", cell.itemProperty()));
+            translate.setOnAction(event -> {
                 String item = cell.getItem();
                 wordInput.setText(item);
                 try {
@@ -83,13 +84,25 @@ public class WordPreferenceRunner extends Application
                 catch (Exception e1) {
 				}
             });
-            MenuItem deleteItem = new MenuItem();
-            deleteItem.textProperty().bind(Bindings.format("Delete", cell.itemProperty()));
-            deleteItem.setOnAction(event -> {
+            MenuItem delete = new MenuItem();
+            delete.textProperty().bind(Bindings.format("Delete", cell.itemProperty()));
+            delete.setOnAction(event -> {
             	markedWords.remove(cell.getItem());
             	list.getItems().remove(cell.getItem());
             	});
-            contextMenu.getItems().addAll(lookUp, deleteItem);
+            MenuItem webpage = new MenuItem();
+            webpage.textProperty().bind(Bindings.format("Webpage", cell.itemProperty()));
+            webpage.setOnAction(event -> {
+            	String item = cell.getItem();
+            	try {
+					setURL(item);
+				} catch (Exception e1) {}
+            	try {
+					java.awt.Desktop.getDesktop().browse(java.net.URI.create(url.toString()));
+				} 
+            	catch (Exception e2) {}
+            	});
+            contextMenu.getItems().addAll(translate, delete, webpage);
 
             cell.textProperty().bind(cell.itemProperty());
             cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
@@ -193,7 +206,7 @@ public class WordPreferenceRunner extends Application
         // Mark/Favorite Button
         ToggleButton mark = new ToggleButton("Mark");
         mark.setMaxHeight(35);
-        mark.setMinWidth(400);
+        mark.setMaxWidth(Double.MAX_VALUE);
         mark.setStyle("-fx-base: lightblue;");
         mark.setOnAction(e -> {
             ToggleButton toggle = (ToggleButton) e.getSource();
@@ -271,22 +284,11 @@ public class WordPreferenceRunner extends Application
     {
     	translations.clear();
     	String word = text;
-    	URL url = null;
     	while (word.contains(" "))
     	{
     		word = word.substring(0, word.indexOf(" ")) + "%20" + word.substring(word.indexOf(" ") + 1);
     	}
-    	switch (languageSetting) 
-    	{
-    		case 1:	url = new URL(url1 + word);
-    				break;
-    		case 2: url = new URL(url2 + word);
-    				break;
-    		case 3: url = new URL(url3 + word);
-    				break;
-    		case 4: url = new URL(url4 + word);
-    				break;
-    	}
+    	setURL(word);
     	BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
         String inputLine;
         while ((inputLine = in.readLine()) != null)
@@ -323,6 +325,21 @@ public class WordPreferenceRunner extends Application
         	}
         }
     	list.setItems(words);
+    }
+    
+    public static void setURL(String word) throws Exception
+    {
+    	switch (languageSetting) 
+    	{
+    		case 1:	url = new URL(url1 + word);
+    				break;
+    		case 2: url = new URL(url2 + word);
+    				break;
+    		case 3: url = new URL(url3 + word);
+    				break;
+    		case 4: url = new URL(url4 + word);
+    				break;
+    	}
     }
     
     public static void saveFile()
