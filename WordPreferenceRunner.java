@@ -455,7 +455,7 @@ public class WordPreferenceRunner extends Application
     	Iterator<String> itr = markedWords.iterator();
     	try
     	{
-    		Formatter file = new Formatter("Vocabulary Words.txt");
+    		Formatter file = new Formatter("settings.txt");
     		file.format("%s\n", languageSetting);	// Remembering the language setting
     		file.format("%s\n", showMoreInfo);		// Remembering whether extra information should be shown
     		file.format("%s\n", enableAutoSave);		// Remembering auto-save settings
@@ -471,7 +471,7 @@ public class WordPreferenceRunner extends Application
     
     public static void loadFile()
     {
-    	File file = new File("Vocabulary Words.txt");
+    	File file = new File("settings.txt");
     	try
     	{
 	    	Scanner sc = new Scanner(file);
