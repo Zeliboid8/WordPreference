@@ -7,6 +7,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListCell;
@@ -21,6 +22,8 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -151,6 +154,10 @@ public class WordPreferenceRunner extends Application
         spaToEng.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
+        		if (languageSetting == 1)
+        		{
+        			spaToEng.setSelected(true);
+        		}
         		languageSetting = 1;
         		wordInput.setPromptText(instructions1);
         		engToSpa.setSelected(false);
@@ -161,6 +168,10 @@ public class WordPreferenceRunner extends Application
         engToSpa.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
+        		if (languageSetting == 2)
+        		{
+        			engToSpa.setSelected(true);
+        		}
         		languageSetting = 2;
         		wordInput.setPromptText(instructions2);
         		spaToEng.setSelected(false);
@@ -171,6 +182,10 @@ public class WordPreferenceRunner extends Application
         freToEng.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
+        		if (languageSetting == 3)
+        		{
+        			freToEng.setSelected(true);
+        		}
         		languageSetting = 3;
         		wordInput.setPromptText(instructions3);
         		spaToEng.setSelected(false);
@@ -181,6 +196,10 @@ public class WordPreferenceRunner extends Application
         engToFre.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
+        		if (languageSetting == 4)
+        		{
+        			engToFre.setSelected(true);
+        		}
         		languageSetting = 4;
         		wordInput.setPromptText(instructions4);
         		spaToEng.setSelected(false);
@@ -204,11 +223,11 @@ public class WordPreferenceRunner extends Application
         menuBar.getMenus().addAll(menuFile, menuOptions, menuMore);
         
         // Mark/Favorite Button
-        ToggleButton mark = new ToggleButton("Mark");
-        mark.setMaxHeight(35);
-        mark.setMaxWidth(Double.MAX_VALUE);
-        mark.setStyle("-fx-base: lightblue;");
-        mark.setOnAction(e -> {
+        ToggleButton markButton = new ToggleButton("Mark");
+        markButton.setMaxHeight(35);
+        markButton.setMaxWidth(Double.MAX_VALUE);
+        markButton.setStyle("-fx-base: lightblue;");
+        markButton.setOnAction(e -> {
             ToggleButton toggle = (ToggleButton) e.getSource();
             if (wordInput.getText().length() != 0)
             {
@@ -223,6 +242,30 @@ public class WordPreferenceRunner extends Application
             		System.out.println(wordInput.getText() + " removed.");
             	}
             }
+        });
+        
+     // Regular Search Button
+        Button searchButton = new Button("Search");
+        searchButton.setMaxHeight(30);
+        searchButton.setPrefWidth(80);
+        searchButton.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		try {
+        			search(wordInput.getText());
+				} catch (Exception e1) 
+        		{
+					System.out.println("Word search failed.");
+				}
+        		if (markedWords.contains(wordInput.getText()))
+        		{
+        			markButton.setSelected(true);
+        		}
+        		else
+        		{
+        			markButton.setSelected(false);
+        		}
+        	}
         });
         
         // Word Input Section
@@ -240,6 +283,7 @@ public class WordPreferenceRunner extends Application
         wordInput.setPromptText("Introduzca su palabra aqui.");
         wordInput.setPrefHeight(30);
         wordInput.setMaxHeight(30);
+        wordInput.setMaxWidth(Double.MAX_VALUE);
 
         EventHandler<KeyEvent> eventHandlerEnter = new EventHandler<KeyEvent>() 
         {
@@ -256,16 +300,21 @@ public class WordPreferenceRunner extends Application
 					}
             		if (markedWords.contains(wordInput.getText()))
             		{
-            			mark.setSelected(true);
+            			markButton.setSelected(true);
             		}
             		else
             		{
-            			mark.setSelected(false);
+            			markButton.setSelected(false);
             		}
             	}
             }
         };  
         wordInput.addEventFilter(KeyEvent.KEY_PRESSED, eventHandlerEnter);
+        HBox hbox = new HBox();
+        HBox.setHgrow(wordInput, Priority.ALWAYS);
+        hbox.setSpacing(10);
+        hbox.getChildren().addAll(wordInput, searchButton);
+        hbox.setAlignment(Pos.CENTER);
         
         Scene scene = new Scene(new VBox(), 420, 290);
         scene.setFill(Color.OLDLACE);
@@ -273,7 +322,7 @@ public class WordPreferenceRunner extends Application
         vbox.setAlignment(Pos.CENTER);
         vbox.setSpacing(10);
         vbox.setPadding(new Insets(10, 10, 10, 10));
-        vbox.getChildren().addAll(wordInput, mark, list);
+        vbox.getChildren().addAll(hbox, markButton, list);
         ((VBox) scene.getRoot()).getChildren().addAll(menuBar, vbox);
         scene.getStylesheets().add("Theme.css");
         window.setScene(scene);
@@ -348,6 +397,8 @@ public class WordPreferenceRunner extends Application
     	try
     	{
     		Formatter file = new Formatter("Vocabulary Words.txt");
+    		file.format("%s\n", languageSetting);	// Remembering the language setting
+    		file.format("%s\n", showMoreInfo);		// Remembering whether extra information should be shown
     		while (itr.hasNext())
     		{
     			file.format("%s\n", itr.next());
@@ -364,6 +415,14 @@ public class WordPreferenceRunner extends Application
     	try
     	{
 	    	Scanner sc = new Scanner(file);
+	    	if (sc.hasNextLine())
+	    	{
+	    		languageSetting = Integer.parseInt(sc.nextLine());	// Setting language setting
+	    	}
+	    	if (sc.hasNextLine())
+	    	{
+	    		showMoreInfo = Boolean.valueOf(sc.nextLine());	// Setting extra information setting
+	    	}
 			while (sc.hasNextLine())
 			{
 				markedWords.add(sc.nextLine());
