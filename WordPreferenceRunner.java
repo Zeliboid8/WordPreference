@@ -40,15 +40,42 @@ public class WordPreferenceRunner extends Application
     private static ListView<String> list = new ListView<String>();	// List of possible meanings
     private static TextField wordInput = new TextField(); // Input field
     private static Set<String> markedWords = new HashSet<String>(); // Set of marked words
-    private static int languageSetting = 1;
-    private static boolean showMoreInfo = false;
-    private static URL url;
     
+    // Menu items
+    private static ContextMenu contextMenu;
+    private static MenuItem translate;
+    private static MenuItem delete;
+    private static MenuItem webpage;
+    private static MenuBar menuBar;
+    private static Menu menuFile;
+    private static MenuItem reviewMarked;
+    private static MenuItem save;
+    private static MenuItem close;
+    private static Menu menuOptions;
+    private static CheckMenuItem spaToEng;
+    private static CheckMenuItem engToSpa;
+    private static CheckMenuItem freToEng;
+    private static CheckMenuItem engToFre;
+    private static Menu menuMore;
+    private static CheckMenuItem showInfo;
+    private static CheckMenuItem autoSave;
+    
+    // Buttons
+    private static ToggleButton markButton;
+    private static Button searchButton;
+    
+    private static boolean showMoreInfo = true;
+    private static boolean enableAutoSave = false;
+    private static int languageSetting = 1;
+    
+    // Potential URL Strings
     private static final String url1 = "http://www.wordreference.com/es/en/translation.asp?spen=";	// Spanish to English
     private static final String url2 = "http://www.wordreference.com/es/translation.asp?tranword=";	// English to Spanish
     private static final String url3 = "http://www.wordreference.com/fren/";	// French to English
     private static final String url4 = "http://www.wordreference.com/enfr/";	// English to French
+    private static URL url;
     
+    // Text field instructions
     private static final String instructions1 = "Introduzca su palabra aqui.";
     private static final String instructions2 = "Type your word here.";
     private static final String instructions3 = "Tape tu mot ici.";
@@ -65,7 +92,7 @@ public class WordPreferenceRunner extends Application
         window = primaryStage;
         // Setting window title
         window.setTitle("WordPreference");
-        // Setting taskbar icon
+        // Setting icon
         window.getIcons().add(new Image(WordPreferenceRunner.class.getResourceAsStream("Icon.png")));
 
         // Translated Table (on right)
@@ -75,8 +102,8 @@ public class WordPreferenceRunner extends Application
      // Right-click features
         list.setCellFactory(listView -> {
             ListCell<String> cell = new ListCell<>();
-            ContextMenu contextMenu = new ContextMenu(); // Right-click menu
-            MenuItem translate = new MenuItem();
+            contextMenu = new ContextMenu(); // Right-click menu
+            translate = new MenuItem();
             translate.textProperty().bind(Bindings.format("Translate", cell.itemProperty()));
             translate.setOnAction(event -> {
                 String item = cell.getItem();
@@ -87,13 +114,13 @@ public class WordPreferenceRunner extends Application
                 catch (Exception e1) {
 				}
             });
-            MenuItem delete = new MenuItem();
+            delete = new MenuItem();
             delete.textProperty().bind(Bindings.format("Delete", cell.itemProperty()));
             delete.setOnAction(event -> {
             	markedWords.remove(cell.getItem());
             	list.getItems().remove(cell.getItem());
             	});
-            MenuItem webpage = new MenuItem();
+            webpage = new MenuItem();
             webpage.textProperty().bind(Bindings.format("Webpage", cell.itemProperty()));
             webpage.setOnAction(event -> {
             	String item = cell.getItem();
@@ -119,9 +146,9 @@ public class WordPreferenceRunner extends Application
         });
         
      // Menu Section
-        MenuBar menuBar = new MenuBar();
-        Menu menuFile = new Menu("File");
-        MenuItem reviewMarked = new MenuItem("Review");
+        menuBar = new MenuBar();
+        menuFile = new Menu("File");
+        reviewMarked = new MenuItem("Review");
         reviewMarked.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
@@ -135,7 +162,7 @@ public class WordPreferenceRunner extends Application
         	}
         });
         reviewMarked.setAccelerator(KeyCombination.keyCombination("Ctrl+R"));
-        MenuItem save = new MenuItem("Save");
+        save = new MenuItem("Save");
         save.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
@@ -143,74 +170,51 @@ public class WordPreferenceRunner extends Application
         	}
         });
         save.setAccelerator(KeyCombination.keyCombination("Ctrl+S"));
-        menuFile.getItems().addAll(reviewMarked, save);
+        close = new MenuItem("Close");
+        close.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		window.close();
+        	}
+        });
+        close.setAccelerator(KeyCombination.keyCombination("Ctrl+W"));
         
-        Menu menuOptions = new Menu("Options");
-        CheckMenuItem spaToEng = new CheckMenuItem("Spanish to English");
-        CheckMenuItem engToSpa = new CheckMenuItem("English to Spanish");
-        CheckMenuItem freToEng = new CheckMenuItem("French to English");
-        CheckMenuItem engToFre = new CheckMenuItem("English to French");
-        spaToEng.setSelected(true);
+        menuFile.getItems().addAll(reviewMarked, save, close);
+        
+        menuOptions = new Menu("Options");
+        spaToEng = new CheckMenuItem("Spanish to English");
+        engToSpa = new CheckMenuItem("English to Spanish");
+        freToEng = new CheckMenuItem("French to English");
+        engToFre = new CheckMenuItem("English to French");
         spaToEng.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
-        		if (languageSetting == 1)
-        		{
-        			spaToEng.setSelected(true);
-        		}
-        		languageSetting = 1;
-        		wordInput.setPromptText(instructions1);
-        		engToSpa.setSelected(false);
-        		freToEng.setSelected(false);
-        		engToFre.setSelected(false);
+        		setLanguage(1);
         	}
         });
         engToSpa.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
-        		if (languageSetting == 2)
-        		{
-        			engToSpa.setSelected(true);
-        		}
-        		languageSetting = 2;
-        		wordInput.setPromptText(instructions2);
-        		spaToEng.setSelected(false);
-        		freToEng.setSelected(false);
-        		engToFre.setSelected(false);
+        		setLanguage(2);
         	}
         });
         freToEng.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
-        		if (languageSetting == 3)
-        		{
-        			freToEng.setSelected(true);
-        		}
-        		languageSetting = 3;
-        		wordInput.setPromptText(instructions3);
-        		spaToEng.setSelected(false);
-        		engToSpa.setSelected(false);
-        		engToFre.setSelected(false);
+        		setLanguage(3);
         	}
         });
         engToFre.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
-        		if (languageSetting == 4)
-        		{
-        			engToFre.setSelected(true);
-        		}
-        		languageSetting = 4;
-        		wordInput.setPromptText(instructions4);
-        		spaToEng.setSelected(false);
-        		engToSpa.setSelected(false);
-        		freToEng.setSelected(false);
+        		setLanguage(4);
         	}
         });
+        setLanguage(languageSetting);
         menuOptions.getItems().addAll(spaToEng, engToSpa, new SeparatorMenuItem(), freToEng, engToFre);
         
-        Menu menuMore = new Menu("More");
-        CheckMenuItem showInfo = new CheckMenuItem("Show More Information");
+        menuMore = new Menu("More");
+        showInfo = new CheckMenuItem("Show More Information");
         showInfo.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
@@ -219,11 +223,28 @@ public class WordPreferenceRunner extends Application
         	}
         });
         showInfo.setAccelerator(KeyCombination.keyCombination("Ctrl+I"));
-        menuMore.getItems().add(showInfo);
+        if (showMoreInfo)
+        {
+        	showInfo.setSelected(true);
+        }
+        
+        autoSave = new CheckMenuItem("Enable Autosave");
+        autoSave.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		enableAutoSave = !enableAutoSave;
+        	}
+        });
+        if (enableAutoSave)
+        {
+        	autoSave.setSelected(true);
+        }
+        
+        menuMore.getItems().addAll(showInfo, autoSave);
         menuBar.getMenus().addAll(menuFile, menuOptions, menuMore);
         
         // Mark/Favorite Button
-        ToggleButton markButton = new ToggleButton("Mark");
+        markButton = new ToggleButton("Mark");
         markButton.setMaxHeight(35);
         markButton.setMaxWidth(Double.MAX_VALUE);
         markButton.setStyle("-fx-base: lightblue;");
@@ -245,7 +266,7 @@ public class WordPreferenceRunner extends Application
         });
         
      // Regular Search Button
-        Button searchButton = new Button("Search");
+        searchButton = new Button("Search");
         searchButton.setMaxHeight(30);
         searchButton.setPrefWidth(80);
         searchButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -269,18 +290,7 @@ public class WordPreferenceRunner extends Application
         });
         
         // Word Input Section
-        switch (languageSetting) 
-    	{
-    		case 1:	wordInput.setPromptText(instructions1);
-    				break;
-    		case 2: wordInput.setPromptText(instructions2);
-    				break;
-    		case 3: wordInput.setPromptText(instructions3);
-    				break;
-    		case 4: wordInput.setPromptText(instructions4);
-    				break;
-    	}
-        wordInput.setPromptText("Introduzca su palabra aqui.");
+        updateInstructions();
         wordInput.setPrefHeight(30);
         wordInput.setMaxHeight(30);
         wordInput.setMaxWidth(Double.MAX_VALUE);
@@ -359,6 +369,55 @@ public class WordPreferenceRunner extends Application
         in.close();
     }
     
+    public static void setLanguage(int language)
+    {
+    	if (language == 1)
+    	{
+	    	if (languageSetting == 1)	// Prevents having no language selected
+			{
+				spaToEng.setSelected(true);
+			}
+			languageSetting = 1;
+			engToSpa.setSelected(false);
+			freToEng.setSelected(false);
+			engToFre.setSelected(false);
+    	}
+    	else if (language == 2)
+    	{
+			if (languageSetting == 2)	// Prevents having no language selected
+			{
+				engToSpa.setSelected(true);
+			}
+			languageSetting = 2;
+			spaToEng.setSelected(false);
+			freToEng.setSelected(false);
+			engToFre.setSelected(false);
+    	}
+    	else if (language == 3)
+    	{
+			if (languageSetting == 3)	// Prevents having no language selected
+			{
+				freToEng.setSelected(true);
+			}
+			languageSetting = 3;
+			spaToEng.setSelected(false);
+			engToSpa.setSelected(false);
+			engToFre.setSelected(false);
+    	}
+    	else if (language == 4)
+    	{
+			if (languageSetting == 4)	// Prevents having no language selected
+			{
+				engToFre.setSelected(true);
+			}
+			languageSetting = 4;
+			spaToEng.setSelected(false);
+			engToSpa.setSelected(false);
+			freToEng.setSelected(false);
+    	}
+    	updateInstructions();
+    }
+    
     public static void update()
     {
     	words.clear();
@@ -399,6 +458,7 @@ public class WordPreferenceRunner extends Application
     		Formatter file = new Formatter("Vocabulary Words.txt");
     		file.format("%s\n", languageSetting);	// Remembering the language setting
     		file.format("%s\n", showMoreInfo);		// Remembering whether extra information should be shown
+    		file.format("%s\n", enableAutoSave);		// Remembering auto-save settings
     		while (itr.hasNext())
     		{
     			file.format("%s\n", itr.next());
@@ -418,10 +478,8 @@ public class WordPreferenceRunner extends Application
 	    	if (sc.hasNextLine())
 	    	{
 	    		languageSetting = Integer.parseInt(sc.nextLine());	// Setting language setting
-	    	}
-	    	if (sc.hasNextLine())
-	    	{
-	    		showMoreInfo = Boolean.valueOf(sc.nextLine());	// Setting extra information setting
+	    		showMoreInfo = Boolean.valueOf(sc.nextLine());		// Setting extra information setting
+	    		enableAutoSave = Boolean.valueOf(sc.nextLine());	// Setting auto-save setting
 	    	}
 			while (sc.hasNextLine())
 			{
@@ -433,6 +491,21 @@ public class WordPreferenceRunner extends Application
     	{
     	}
     	System.out.println("File loaded.");
+    }
+    
+    public static void updateInstructions()
+    {
+    	switch (languageSetting) 
+    	{
+    		case 1:	wordInput.setPromptText(instructions1);
+    				break;
+    		case 2: wordInput.setPromptText(instructions2);
+    				break;
+    		case 3: wordInput.setPromptText(instructions3);
+    				break;
+    		case 4: wordInput.setPromptText(instructions4);
+    				break;
+    	}
     }
     
     public static String convert(String original)
@@ -459,5 +532,13 @@ public class WordPreferenceRunner extends Application
     	original = original.replace("Ã¢", "â");
     	original = original.replace("Ã", "à"); // Must come last
     	return original;
+    }
+    
+    public void stop()
+    {
+        if (enableAutoSave)
+        {
+        	saveFile();
+        }
     }
 }
