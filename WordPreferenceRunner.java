@@ -47,9 +47,11 @@ public class WordPreferenceRunner extends Application
     private static MenuItem webpage;
     private static MenuBar menuBar;
     private static Menu menuFile;
-    private static MenuItem reviewMarked;
+    private static MenuItem review;
     private static MenuItem save;
     private static MenuItem close;
+    private static Menu menuEdit;
+    private static MenuItem mark;
     private static Menu menuOptions;
     private static CheckMenuItem spaToEng;
     private static CheckMenuItem engToSpa;
@@ -119,7 +121,7 @@ public class WordPreferenceRunner extends Application
             delete.textProperty().bind(Bindings.format("Delete", cell.itemProperty()));
             delete.setOnAction(event -> {
             	String word = cell.getItem();
-            	System.out.println(word + "removed.");
+            	System.out.println(word + " removed.");
             	markedWords.remove(word);
             	list.getItems().remove(word);
             	});
@@ -153,8 +155,8 @@ public class WordPreferenceRunner extends Application
         
         // File menu
         menuFile = new Menu("File");
-        reviewMarked = new MenuItem("Review");
-        reviewMarked.setOnAction(new EventHandler<ActionEvent>() {
+        review = new MenuItem("Review");
+        review.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
         		translations.clear();
@@ -166,7 +168,7 @@ public class WordPreferenceRunner extends Application
         		list.setItems(words);
         	}
         });
-        reviewMarked.setAccelerator(KeyCombination.keyCombination("Ctrl+R"));
+        review.setAccelerator(KeyCombination.keyCombination("Ctrl+R"));
         save = new MenuItem("Save");
         save.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
@@ -183,8 +185,19 @@ public class WordPreferenceRunner extends Application
         	}
         });
         close.setAccelerator(KeyCombination.keyCombination("Ctrl+W"));
+        menuFile.getItems().addAll(review, save, close);
         
-        menuFile.getItems().addAll(reviewMarked, save, close);
+        // Edit menu
+        menuEdit = new Menu("Edit");
+        mark = new MenuItem("Mark");
+        mark.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		markWord(wordInput.getText());
+        	}
+        });
+        mark.setAccelerator(KeyCombination.keyCombination("Ctrl+M"));
+        menuEdit.getItems().addAll(mark);
         
         // Options menu
         menuOptions = new Menu("Options");
@@ -261,7 +274,7 @@ public class WordPreferenceRunner extends Application
         }
         
         menuMore.getItems().addAll(showInfo, markAll, autoSave);
-        menuBar.getMenus().addAll(menuFile, menuOptions, menuMore);
+        menuBar.getMenus().addAll(menuFile, menuEdit, menuOptions, menuMore);
         
         // Mark/Favorite Button
         markButton = new ToggleButton("Mark");
@@ -269,20 +282,8 @@ public class WordPreferenceRunner extends Application
         markButton.setMaxWidth(Double.MAX_VALUE);
         markButton.setStyle("-fx-base: lightblue;");
         markButton.setOnAction(e -> {
-            ToggleButton toggle = (ToggleButton) e.getSource();
-            if (wordInput.getText().length() != 0)
-            {
-            	if (toggle.isSelected())
-            	{
-            		markedWords.add(wordInput.getText());
-            		System.out.println(wordInput.getText() + " added.");
-            	}
-            	else if (!toggle.isSelected())
-            	{
-            		markedWords.remove(wordInput.getText());
-            		System.out.println(wordInput.getText() + " removed.");
-            	}
-            }
+            markButton.setSelected(!markButton.isSelected());
+        	markWord(wordInput.getText());
         });
         
      // Regular Search Button
@@ -328,14 +329,6 @@ public class WordPreferenceRunner extends Application
             		{
 						System.out.println("Word search failed.");
 					}
-            		if (markedWords.contains(wordInput.getText()))
-            		{
-            			markButton.setSelected(true);
-            		}
-            		else
-            		{
-            			markButton.setSelected(false);
-            		}
             	}
             }
         };  
@@ -393,6 +386,14 @@ public class WordPreferenceRunner extends Application
         		System.out.println(wordInput.getText() + " added.");
         	}
     	}
+        if (markedWords.contains(wordInput.getText()))
+		{
+			markButton.setSelected(true);
+		}
+		else
+		{
+			markButton.setSelected(false);
+		}
         update();
         in.close();
     }
@@ -444,6 +445,29 @@ public class WordPreferenceRunner extends Application
 			freToEng.setSelected(false);
     	}
     	updateInstructions();
+    }
+    
+    public static void markWord(String word)
+    {
+    	if (word.length() != 0)
+    	{
+    		if (markButton.isSelected())
+	    	{
+    			markedWords.remove(word);
+	    		System.out.println(word + " removed.");
+	    		markButton.setSelected(false);
+	    	}
+	    	else if (!markButton.isSelected())
+	    	{
+	    		markedWords.add(word);
+	    		System.out.println(word + " added.");
+	    		markButton.setSelected(true);
+	    	}
+    	}
+    	else
+    	{
+    		markButton.setSelected(false);
+    	}
     }
     
     public static void update()
