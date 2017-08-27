@@ -362,12 +362,6 @@ public class WordPreferenceRunner extends Application
     public static void search(String word) throws Exception 
     {
     	translations.clear();
-    	if (enableMarkAll)
-    	{
-    		markedWords.add(word);
-    		markButton.setSelected(true);
-    		System.out.println(wordInput.getText() + " added.");
-    	}
     	while (word.contains(" "))
     	{
     		word = word.substring(0, word.indexOf(" ")) + "%20" + word.substring(word.indexOf(" ") + 1);
@@ -390,6 +384,15 @@ public class WordPreferenceRunner extends Application
         		}
         	}
         }
+        if (enableMarkAll)
+    	{
+        	if (translations.size() != 0)
+        	{
+        		markedWords.add(word);
+        		markButton.setSelected(true);
+        		System.out.println(wordInput.getText() + " added.");
+        	}
+    	}
         update();
         in.close();
     }
@@ -537,27 +540,39 @@ public class WordPreferenceRunner extends Application
     
     public static String convert(String original)
     {
-    	original = original.replace("Ã¨", "è");
-    	original = original.replace("Ã©", "é");
-    	original = original.replace("Ã¢", "â");
-    	original = original.replace("Ã²", "ò");
-    	original = original.replace("Ã³", "ó");
-    	original = original.replace("Ã´", "ô");
-    	original = original.replace("Ã§", "ç");
-    	original = original.replace("Ã¼", "ü");
-    	original = original.replace("Ãº", "ú");
-    	original = original.replace("Ã¹", "ù");
-    	original = original.replace("Ã»", "û");
-    	original = original.replace("Ã¯", "ï");
-    	original = original.replace("Ã¬", "ì");
-    	original = original.replace("Ã­", "í");
-    	original = original.replace("Ã®", "î");
-    	original = original.replace("Â¿", "¿");
-    	original = original.replace("Â¡", "¡");
-    	original = original.replace("Ã±", "ñ");
-    	original = original.replace("Ã¡", "á");
-    	original = original.replace("Ã¢", "â");
-    	original = original.replace("Ã", "à"); // Must come last
+    	if (original.contains("Ã"))
+    	{
+	    	original = original.replace("Ã¨", "è");
+	    	original = original.replace("Ã©", "é");
+	    	original = original.replace("Ã¢", "â");
+	    	original = original.replace("Ã²", "ò");
+	    	original = original.replace("Ã³", "ó");
+	    	original = original.replace("Ã´", "ô");
+	    	original = original.replace("Ã§", "ç");
+	    	original = original.replace("Ã¼", "ü");
+	    	original = original.replace("Ãº", "ú");
+	    	original = original.replace("Ã¹", "ù");
+	    	original = original.replace("Ã»", "û");
+	    	original = original.replace("Ã¯", "ï");
+	    	original = original.replace("Ã¬", "ì");
+	    	original = original.replace("Ã­", "í");
+	    	original = original.replace("Ã®", "î");
+	    	original = original.replace("Ã±", "ñ");
+	    	original = original.replace("Ã¡", "á");
+	    	original = original.replace("Ã¢", "â");
+	    	original = original.replace("Ã", "à"); // Must come last
+    	}
+    	if (original.contains("Â"))
+    	{
+    		original = original.replace("Â¿", "¿");
+    		original = original.replace("Â¡", "¡");
+    	}
+    	if (original.contains("â"))
+    	{
+    		original = original.replace("â€¦", "...");
+    		original = original.replace("â€", "–");
+    		original = original.replace("â€™", "’");
+    	}
     	return original;
     }
     
