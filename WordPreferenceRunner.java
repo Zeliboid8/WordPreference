@@ -42,7 +42,6 @@ public class WordPreferenceRunner extends Application
     private static Set<String> markedWords = new HashSet<String>(); // Set of marked words
     
     // Menu items
-    private static ContextMenu contextMenu;
     private static MenuItem translate;
     private static MenuItem delete;
     private static MenuItem webpage;
@@ -58,14 +57,16 @@ public class WordPreferenceRunner extends Application
     private static CheckMenuItem engToFre;
     private static Menu menuMore;
     private static CheckMenuItem showInfo;
+    private static CheckMenuItem markAll;
     private static CheckMenuItem autoSave;
     
     // Buttons
     private static ToggleButton markButton;
     private static Button searchButton;
     
-    private static boolean showMoreInfo = true;
+    private static boolean enableShowInfo = false;
     private static boolean enableAutoSave = false;
+    private static boolean enableMarkAll = false;
     private static int languageSetting = 1;
     
     // Potential URL Strings
@@ -101,8 +102,8 @@ public class WordPreferenceRunner extends Application
         
      // Right-click features
         list.setCellFactory(listView -> {
-            ListCell<String> cell = new ListCell<>();
-            contextMenu = new ContextMenu(); // Right-click menu
+            ListCell<String> cell = new ListCell<>();	 // These seemed to have to be initialized inside the cellFactory
+            ContextMenu contextMenu = new ContextMenu(); // Right-click menu
             translate = new MenuItem();
             translate.textProperty().bind(Bindings.format("Translate", cell.itemProperty()));
             translate.setOnAction(event -> {
@@ -117,8 +118,10 @@ public class WordPreferenceRunner extends Application
             delete = new MenuItem();
             delete.textProperty().bind(Bindings.format("Delete", cell.itemProperty()));
             delete.setOnAction(event -> {
-            	markedWords.remove(cell.getItem());
-            	list.getItems().remove(cell.getItem());
+            	String word = cell.getItem();
+            	System.out.println(word + "removed.");
+            	markedWords.remove(word);
+            	list.getItems().remove(word);
             	});
             webpage = new MenuItem();
             webpage.textProperty().bind(Bindings.format("Webpage", cell.itemProperty()));
@@ -147,6 +150,8 @@ public class WordPreferenceRunner extends Application
         
      // Menu Section
         menuBar = new MenuBar();
+        
+        // File menu
         menuFile = new Menu("File");
         reviewMarked = new MenuItem("Review");
         reviewMarked.setOnAction(new EventHandler<ActionEvent>() {
@@ -181,6 +186,7 @@ public class WordPreferenceRunner extends Application
         
         menuFile.getItems().addAll(reviewMarked, save, close);
         
+        // Options menu
         menuOptions = new Menu("Options");
         spaToEng = new CheckMenuItem("Spanish to English");
         engToSpa = new CheckMenuItem("English to Spanish");
@@ -213,19 +219,33 @@ public class WordPreferenceRunner extends Application
         setLanguage(languageSetting);
         menuOptions.getItems().addAll(spaToEng, engToSpa, new SeparatorMenuItem(), freToEng, engToFre);
         
+        // More menu
         menuMore = new Menu("More");
+        
         showInfo = new CheckMenuItem("Show More Information");
         showInfo.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
         	{
-        		showMoreInfo = !showMoreInfo;
+        		enableShowInfo = !enableShowInfo;
         		update();
         	}
         });
         showInfo.setAccelerator(KeyCombination.keyCombination("Ctrl+I"));
-        if (showMoreInfo)
+        if (enableShowInfo)
         {
         	showInfo.setSelected(true);
+        }
+        
+        markAll = new CheckMenuItem("Mark Searched Words");
+        markAll.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		enableMarkAll = !enableMarkAll;
+        	}
+        });
+        if (enableMarkAll)
+        {
+        	markAll.setSelected(true);
         }
         
         autoSave = new CheckMenuItem("Enable Autosave");
@@ -240,7 +260,7 @@ public class WordPreferenceRunner extends Application
         	autoSave.setSelected(true);
         }
         
-        menuMore.getItems().addAll(showInfo, autoSave);
+        menuMore.getItems().addAll(showInfo, markAll, autoSave);
         menuBar.getMenus().addAll(menuFile, menuOptions, menuMore);
         
         // Mark/Favorite Button
@@ -339,10 +359,15 @@ public class WordPreferenceRunner extends Application
         window.show();
     }
     
-    public static void search(String text) throws Exception 
+    public static void search(String word) throws Exception 
     {
     	translations.clear();
-    	String word = text;
+    	if (enableMarkAll)
+    	{
+    		markedWords.add(word);
+    		markButton.setSelected(true);
+    		System.out.println(wordInput.getText() + " added.");
+    	}
     	while (word.contains(" "))
     	{
     		word = word.substring(0, word.indexOf(" ")) + "%20" + word.substring(word.indexOf(" ") + 1);
@@ -423,7 +448,7 @@ public class WordPreferenceRunner extends Application
     	words.clear();
     	for (Map.Entry<String, String> e : translations.entrySet())
         {
-        	if (showMoreInfo && e.getValue().length() != 0)
+        	if (enableShowInfo && e.getValue().length() != 0)
         	{
         		words.add(e.getKey() + " (" + e.getValue() + ")");
         	}
@@ -456,8 +481,9 @@ public class WordPreferenceRunner extends Application
     	try
     	{
     		Formatter file = new Formatter("settings.txt");
-    		file.format("%s\n", languageSetting);	// Remembering the language setting
-    		file.format("%s\n", showMoreInfo);		// Remembering whether extra information should be shown
+    		file.format("%s\n", languageSetting);		// Remembering the language setting
+    		file.format("%s\n", enableShowInfo);		// Remembering whether extra information should be shown
+    		file.format("%s\n", enableMarkAll);			// Remembering mark all settings
     		file.format("%s\n", enableAutoSave);		// Remembering auto-save settings
     		while (itr.hasNext())
     		{
@@ -478,7 +504,8 @@ public class WordPreferenceRunner extends Application
 	    	if (sc.hasNextLine())
 	    	{
 	    		languageSetting = Integer.parseInt(sc.nextLine());	// Setting language setting
-	    		showMoreInfo = Boolean.valueOf(sc.nextLine());		// Setting extra information setting
+	    		enableShowInfo = Boolean.valueOf(sc.nextLine());	// Setting extra information setting
+	    		enableMarkAll = Boolean.valueOf(sc.nextLine());		// Setting mark all setting
 	    		enableAutoSave = Boolean.valueOf(sc.nextLine());	// Setting auto-save setting
 	    	}
 			while (sc.hasNextLine())
