@@ -39,7 +39,7 @@ public class WordPreferenceRunner extends Application
     private static ObservableList<String> words = FXCollections.observableArrayList(); // Translated words
     private static ListView<String> list = new ListView<String>();	// List of possible meanings
     private static TextField wordInput = new TextField(); // Input field
-    private static Set<String> markedWords = new HashSet<String>(); // Set of marked words
+    private static Set<String> markedWords = new LinkedHashSet<String>(); // Set of marked words
     
     // Menu items
     private static MenuItem translate;
@@ -597,6 +597,7 @@ public class WordPreferenceRunner extends Application
     		original = original.replace("â€", "–");
     		original = original.replace("â€™", "’");
     	}
+    	original = original.replace("%20", " ");
     	return original;
     }
     
