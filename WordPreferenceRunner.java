@@ -40,6 +40,7 @@ public class WordPreferenceRunner extends Application
     private static ListView<String> list = new ListView<String>();	// List of possible meanings
     private static TextField wordInput = new TextField(); // Input field
     private static Set<String> markedWords = new LinkedHashSet<String>(); // Set of marked words
+    private static String baseWord;	// Non-conjugated, non-pluralized, etc.
     
     // Menu items
     private static MenuItem translate;
@@ -59,6 +60,7 @@ public class WordPreferenceRunner extends Application
     private static CheckMenuItem engToFre;
     private static Menu menuMore;
     private static CheckMenuItem showInfo;
+    private static CheckMenuItem markBaseWord;
     private static CheckMenuItem markAll;
     private static CheckMenuItem autoSave;
     
@@ -66,9 +68,10 @@ public class WordPreferenceRunner extends Application
     private static ToggleButton markButton;
     private static Button searchButton;
     
-    private static boolean enableShowInfo = false;
-    private static boolean enableAutoSave = false;
+    private static boolean enableShowInfo = true;
+    private static boolean enableMarkBaseWord = true;
     private static boolean enableMarkAll = false;
+    private static boolean enableAutoSave = false;
     private static int languageSetting = 1;
     
     // Potential URL Strings
@@ -129,10 +132,13 @@ public class WordPreferenceRunner extends Application
             webpage.textProperty().bind(Bindings.format("Webpage", cell.itemProperty()));
             webpage.setOnAction(event -> {
             	String item = cell.getItem();
-            	try {
+            	try 
+            	{
 					setURL(item);
-				} catch (Exception e1) {}
-            	try {
+				} 
+            	catch (Exception e1) {}
+            	try 
+            	{
 					java.awt.Desktop.getDesktop().browse(java.net.URI.create(url.toString()));
 				} 
             	catch (Exception e2) {}
@@ -141,9 +147,12 @@ public class WordPreferenceRunner extends Application
 
             cell.textProperty().bind(cell.itemProperty());
             cell.emptyProperty().addListener((obs, wasEmpty, isNowEmpty) -> {
-                if (isNowEmpty) {
+                if (isNowEmpty) 
+                {
                     cell.setContextMenu(null);
-                } else {
+                } 
+                else 
+                {
                     cell.setContextMenu(contextMenu);
                 }
             });
@@ -249,6 +258,18 @@ public class WordPreferenceRunner extends Application
         	showInfo.setSelected(true);
         }
         
+        markBaseWord = new CheckMenuItem("Mark Base Word");
+        markBaseWord.setOnAction(new EventHandler<ActionEvent>() {
+        	public void handle(ActionEvent click)
+        	{
+        		enableMarkBaseWord = !enableMarkBaseWord;
+        	}
+        });
+        if (enableMarkBaseWord)
+        {
+        	markBaseWord.setSelected(true);
+        }
+        
         markAll = new CheckMenuItem("Mark Searched Words");
         markAll.setOnAction(new EventHandler<ActionEvent>() {
         	public void handle(ActionEvent click)
@@ -273,7 +294,7 @@ public class WordPreferenceRunner extends Application
         	autoSave.setSelected(true);
         }
         
-        menuMore.getItems().addAll(showInfo, markAll, autoSave);
+        menuMore.getItems().addAll(showInfo, markBaseWord, markAll, autoSave);
         menuBar.getMenus().addAll(menuFile, menuEdit, menuOptions, menuMore);
         
         // Mark/Favorite Button
@@ -355,6 +376,7 @@ public class WordPreferenceRunner extends Application
     public static void search(String word) throws Exception 
     {
     	translations.clear();
+    	boolean foundBaseWord = false;
     	while (word.contains(" "))
     	{
     		word = word.substring(0, word.indexOf(" ")) + "%20" + word.substring(word.indexOf(" ") + 1);
@@ -368,13 +390,20 @@ public class WordPreferenceRunner extends Application
         	{
         		if (!inputLine.contains("weight:bold"))
         		{
-        			String beginningCut = inputLine.substring(inputLine.indexOf("class='ToWrd'") + 15);
-        			String endCut = beginningCut.substring(0, beginningCut.indexOf("<"));
-        			String finalWord = convert(endCut);
-        			String beginningCutGender = beginningCut.substring(beginningCut.indexOf("POS2'") + 6);
+        			String beginning = inputLine.substring(inputLine.indexOf("class='ToWrd'") + 15);
+        			String end = beginning.substring(0, beginning.indexOf("<"));
+        			String finalWord = convert(end);
+        			String beginningCutGender = beginning.substring(beginning.indexOf("POS2'") + 6);
         			String endCutGender = beginningCutGender.substring(0, beginningCutGender.indexOf("<"));
         			translations.put(finalWord, endCutGender);
         		}
+        	}
+        	if (!foundBaseWord && inputLine.contains("<td class='FrWrd' ><strong>"))
+        	{
+        		String baseWordBeginning = inputLine.substring(inputLine.indexOf("<td class='FrWrd' ><strong>") + 27);
+        		String baseWordEnd = baseWordBeginning.substring(0, baseWordBeginning.indexOf("<"));
+        		baseWord = convert(baseWordEnd);
+        		foundBaseWord = true;
         	}
         }
         if (enableMarkAll)
@@ -383,7 +412,14 @@ public class WordPreferenceRunner extends Application
         	{
         		markedWords.add(word);
         		markButton.setSelected(true);
-        		System.out.println(wordInput.getText() + " added.");
+        		if (enableMarkBaseWord)
+        		{
+        			System.out.println(baseWord + " added.");
+        		}
+        		else
+        		{
+        			System.out.println(word + " added.");
+        		}
         	}
     	}
         if (markedWords.contains(wordInput.getText()))
@@ -453,14 +489,30 @@ public class WordPreferenceRunner extends Application
     	{
     		if (markButton.isSelected())
 	    	{
-    			markedWords.remove(word);
-	    		System.out.println(word + " removed.");
+	    		if (enableMarkBaseWord)
+	    		{
+	    			markedWords.remove(baseWord);
+	    			System.out.println(baseWord + " removed.");
+	    		}
+	    		else
+	    		{
+	    			markedWords.remove(word);
+	    			System.out.println(word + " removed.");
+	    		}
 	    		markButton.setSelected(false);
 	    	}
 	    	else if (!markButton.isSelected())
 	    	{
-	    		markedWords.add(word);
-	    		System.out.println(word + " added.");
+	    		if (enableMarkBaseWord)
+	    		{
+	    			markedWords.add(baseWord);
+	    			System.out.println(baseWord + " added.");
+	    		}
+	    		else
+	    		{
+	    			markedWords.add(word);
+	    			System.out.println(word + " added.");
+	    		}
 	    		markButton.setSelected(true);
 	    	}
     	}
@@ -489,6 +541,7 @@ public class WordPreferenceRunner extends Application
     
     public static void setURL(String word) throws Exception
     {
+    	word = word.replace(" ", "%20");
     	switch (languageSetting) 
     	{
     		case 1:	url = new URL(url1 + word);
@@ -508,10 +561,11 @@ public class WordPreferenceRunner extends Application
     	try
     	{
     		Formatter file = new Formatter("settings.txt");
-    		file.format("%s\n", languageSetting);		// Remembering the language setting
-    		file.format("%s\n", enableShowInfo);		// Remembering whether extra information should be shown
-    		file.format("%s\n", enableMarkAll);			// Remembering mark all settings
-    		file.format("%s\n", enableAutoSave);		// Remembering auto-save settings
+    		file.format("%s" + System.getProperty("line.separator"), languageSetting);		// Remembering the language setting
+    		file.format("%s" + System.getProperty("line.separator"), enableShowInfo);		// Remembering whether extra information should be shown
+    		file.format("%s" + System.getProperty("line.separator"), enableMarkBaseWord);	// Remembering mark base word settings
+    		file.format("%s" + System.getProperty("line.separator"), enableMarkAll);		// Remembering mark all settings
+    		file.format("%s" + System.getProperty("line.separator"), enableAutoSave);		// Remembering auto-save settings
     		while (itr.hasNext())
     		{
     			file.format("%s\n", itr.next());
@@ -530,10 +584,11 @@ public class WordPreferenceRunner extends Application
 	    	Scanner sc = new Scanner(file);
 	    	if (sc.hasNextLine())
 	    	{
-	    		languageSetting = Integer.parseInt(sc.nextLine());	// Setting language setting
-	    		enableShowInfo = Boolean.valueOf(sc.nextLine());	// Setting extra information setting
-	    		enableMarkAll = Boolean.valueOf(sc.nextLine());		// Setting mark all setting
-	    		enableAutoSave = Boolean.valueOf(sc.nextLine());	// Setting auto-save setting
+	    		languageSetting = Integer.parseInt(sc.nextLine());		// Setting language setting
+	    		enableShowInfo = Boolean.valueOf(sc.nextLine());		// Setting extra information setting
+	    		enableMarkBaseWord = Boolean.valueOf(sc.nextLine());	// Setting mark base word setting
+	    		enableMarkAll = Boolean.valueOf(sc.nextLine());			// Setting mark all setting
+	    		enableAutoSave = Boolean.valueOf(sc.nextLine());		// Setting auto-save setting
 	    	}
 			while (sc.hasNextLine())
 			{
